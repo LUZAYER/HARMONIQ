@@ -114,7 +114,9 @@ class BenchmarkDataLoader:
             q = str(row.get("Question", ""))
             best_ans = str(row.get("Best Answer", ""))
             incorrect_ans = str(row.get("Best Incorrect Answer", ""))
+            correct_knowledge = str(row.get("Correct Answers", ""))
             src = str(row.get("Source", ""))
+            evidence_text = correct_knowledge if correct_knowledge and correct_knowledge != "nan" else src
             cat = str(row.get("Category", ""))
             
             # Factual instance
@@ -125,8 +127,8 @@ class BenchmarkDataLoader:
                     response=best_ans,
                     label=0,
                     dataset_name="TruthfulQA",
-                    grounding_evidence=src,
-                    metadata={"category": cat}
+                    grounding_evidence=evidence_text,
+                    metadata={"category": cat, "source_url": src}
                 ))
             # Hallucinated instance
             if incorrect_ans and incorrect_ans != "nan":
@@ -136,8 +138,8 @@ class BenchmarkDataLoader:
                     response=incorrect_ans,
                     label=1,
                     dataset_name="TruthfulQA",
-                    grounding_evidence=src,
-                    metadata={"category": cat}
+                    grounding_evidence=evidence_text,
+                    metadata={"category": cat, "source_url": src}
                 ))
         return records[:limit] if limit else records
 
