@@ -1,16 +1,20 @@
-# Systematic Ablation Study Results
+# HARMONIQ Component Ablation Study
 
-Signal dropout experiments conducted across the held-out stratified test set ($N=96$). Each signal ($C, R, S, V$) is removed systematically to quantify its marginal contribution to detection performance, calibration, and false positive suppression.
-
-| Configuration | Balanced Accuracy | $\Delta$ Bal. Acc | F1-Score | $\Delta$ F1 | ROC-AUC | $\Delta$ AUC | False Positive Rate (FPR) | Expected Calibration Error (ECE) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Full HARMONIQ ($C + R + S + V$)** | **0.824** | **—** | **0.819** | **—** | **0.863** | **—** | **0.081** | **0.106** |
-| Ablation: w/o Confidence ($C$) | 0.824 | 0.000 | 0.819 | 0.000 | 0.863 | -0.0002 | 0.081 | 0.106 |
-| Ablation: w/o Retrieval ($R$) | 0.785 | -0.039 | 0.777 | -0.042 | 0.819 | -0.0442 | 0.108 | 0.118 |
-| Ablation: w/o Semantic ($S$) | 0.824 | 0.000 | 0.819 | 0.000 | 0.858 | -0.0046 | 0.081 | 0.122 |
-| Ablation: w/o Self-Verification ($V$) | 0.831 | +0.007 | 0.847 | +0.028 | 0.875 | +0.0124 | 0.135 | 0.112 |
-
-### Critical Takeaways:
-- **Retrieval Grounding ($R$) is the Primary Anchor:** Removing external evidence grounding results in the sharpest drop in discriminative power ($\Delta \text{AUC} = -0.0442$, $\Delta F_1 = -0.0423$) and worsens ECE from 0.106 to 0.118.
-- **Self-Verification ($V$) Governs FPR Suppression:** While removing $V$ marginally alters threshold sensitivity on this sample, it causes the False Positive Rate to jump from **8.1% to 13.5%** (+5.4 percentage points). Cross-sample consistency acts as a vital stabilizer against false alarms on ambiguous claims.
-- **Semantic Alignment ($S$) Sharpens Calibration:** Omitting semantic entailment and contradiction checks degrades model calibration (ECE worsens from 0.106 to 0.122) and drops ROC-AUC by 0.005.
+| Configuration                    |    AUC |   Bal_Acc |    FPR |    FNR |   Delta_AUC |   Delta_BalAcc |
+|:---------------------------------|-------:|----------:|-------:|-------:|------------:|---------------:|
+| Full HARMONIQ                    | 0.8158 |    0.7206 | 0.0588 | 0.5    |      0      |         0      |
+| w/o Confidence (C)               | 0.8116 |    0.7297 | 0.0882 | 0.4524 |     -0.0042 |         0.0091 |
+| w/o Retrieval NLI (R)            | 0.8158 |    0.7178 | 0.0882 | 0.4762 |      0      |        -0.0028 |
+| w/o Semantic Faithfulness (S)    | 0.82   |    0.7444 | 0.0588 | 0.4524 |      0.0042 |         0.0238 |
+| w/o Self-Verification (V)        | 0.7689 |    0.6905 | 0      | 0.619  |     -0.0469 |        -0.0301 |
+| Signal C alone                   | 0.6838 |    0.6155 | 0.4118 | 0.3571 |     -0.132  |        -0.1051 |
+| Signal R alone                   | 0.7444 |    0.7024 | 0      | 0.5952 |     -0.0714 |        -0.0182 |
+| Signal S alone                   | 0.7444 |    0.6905 | 0      | 0.619  |     -0.0714 |        -0.0301 |
+| Signal V alone                   | 0.6943 |    0.6471 | 0.2059 | 0.5    |     -0.1215 |        -0.0735 |
+| Aggregator: Max Pooling          | 0.8109 |    0.7388 | 0.1176 | 0.4048 |     -0.0049 |         0.0182 |
+| Aggregator: Mean Pooling         | 0.8326 |    0.7024 | 0      | 0.5952 |      0.0168 |        -0.0182 |
+| Aggregator: Noisy-OR             | 0.7591 |    0.666  | 0.3824 | 0.2857 |     -0.0567 |        -0.0546 |
+| Aggregator: Power-Mean (p=2)     | 0.82   |    0.7024 | 0      | 0.5952 |      0.0042 |        -0.0182 |
+| HCS w/o Length Damping (beta=0)  | 0.8137 |    0.7388 | 0.1176 | 0.4048 |     -0.0021 |         0.0182 |
+| Mean Imputation (w/o Native NaN) | 0.8053 |    0.7325 | 0.0588 | 0.4762 |     -0.0105 |         0.0119 |
+| Zero Imputation (w/o Native NaN) | 0.8172 |    0.694  | 0.0882 | 0.5238 |      0.0014 |        -0.0266 |

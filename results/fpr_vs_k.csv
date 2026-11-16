@@ -1,0 +1,5 @@
+k_bin,N_Factual,HARMONIQ,Agg_Max,Agg_Mean,Agg_NoisyOR,Agg_PowerMean_p2,Theoretical_Independent
+1 claim,50,0.06,0.0,0.0,0.0,0.0,0.01
+2-3 claims,7,1.0,0.1429,0.0,1.0,0.0,0.0248
+4-6 claims,31,0.1613,0.0968,0.0,0.5806,0.0,0.049
+7+ claims,17,0.3529,0.2353,0.0,1.0,0.0,0.0773
