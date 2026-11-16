@@ -1,7 +1,7 @@
 Component,Mean_ms,p50_ms,p95_ms,Notes
 Claim Decomposition,0.01,0.01,0.01,Clausal segmentation
-Confidence Analysis (C),0.02,0.02,0.03,Proxy-LM entity uncertainty
-Retrieval Grounding (R),0.03,0.02,0.06,Passage selection + NLI
-Semantic Faithfulness (S),0.03,0.02,0.1,Directional + deterministic checks
-Gated Self-Verification (V),0.01,0.01,0.01,Gated: 100.0% routed
-End-to-End Pipeline,0.2,0.13,0.31,Throughput: 6829.12 claims/sec
+Confidence Analysis (C),0.02,0.02,0.04,Proxy-LM entity uncertainty
+Retrieval Grounding (R),0.02,0.01,0.06,Passage selection + NLI
+Semantic Faithfulness (S),0.03,0.01,0.12,Directional + deterministic checks
+Gated Self-Verification (V),0.01,0.01,0.02,Gated: 100.0% routed
+End-to-End Pipeline,0.17,0.12,0.37,Throughput: 7783.58 claims/sec
