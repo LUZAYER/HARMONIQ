@@ -1,0 +1,19 @@
+Dataset,Split,N_Responses,N_Groups,N_Claims,Prevalence
+RAGTruth,train,12690,2137,99696,0.4486
+RAGTruth,dev,2252,378,17571,0.4463
+RAGTruth,test,2675,450,19861,0.3525
+HaluEval-QA,train,12000,6000,12377,0.5
+HaluEval-QA,dev,3000,1500,3092,0.5
+HaluEval-QA,test,5000,2500,5160,0.5
+TruthfulQA,train,948,474,957,0.5
+TruthfulQA,dev,236,118,237,0.5
+TruthfulQA,test,396,198,403,0.5
+WikiBio-GPT3,train,143,143,1127,0.951
+WikiBio-GPT3,dev,36,36,302,0.9444
+WikiBio-GPT3,test,59,59,479,0.9492
+FavaMultiSamples,train,267,90,3272,0.6854
+FavaMultiSamples,dev,65,22,774,0.6769
+FavaMultiSamples,test,128,38,1614,0.625
+Pooled Total,train,26048,8844,117429,0.4793
+Pooled Total,dev,5589,2054,21976,0.4833
+Pooled Total,test,8258,3245,27517,0.4574
