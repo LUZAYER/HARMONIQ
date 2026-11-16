@@ -1,19 +1,19 @@
-# Dependencies for Hybrid Hallucination Detection Framework
-# Compatible with Python 3.10+ (Local and Google Colab)
+# Core HARMONIQ Research Framework Dependencies
+# Pinned for Python 3.10+ / Linux & Google Colab environments
 
-numpy>=1.24.0
-pandas>=2.0.0
-scipy>=1.10.0
-scikit-learn>=1.3.0
-requests>=2.28.0
-tqdm>=4.65.0
-nltk>=3.8.0
+numpy>=1.26.0,<3.0.0
+pandas>=2.1.0,<4.0.0
+scipy>=1.11.0,<2.0.0
+scikit-learn>=1.3.0,<2.0.0
 pyarrow>=14.0.0
+matplotlib>=3.8.0
 tabulate>=0.9.0
+tqdm>=4.66.0
+requests>=2.31.0
+nltk>=3.8.1
 
-# Optional deep learning & embedding models (if GPU / torch available on Colab)
-# In Google Colab, torch is pre-installed.
-# Uncomment the following if running heavy neural embeddings or NLI transformers:
-# torch>=2.0.0
-# transformers>=4.36.0
+# Optional GPU Neural Models for Colab Execution (Pre-installed or pip install in Colab)
+# torch>=2.1.0
+# transformers>=4.38.0
 # sentence-transformers>=2.2.2
+# minicheck>=0.1.0

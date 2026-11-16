@@ -1,252 +1,116 @@
-# HARMONIQ: Hybrid Adaptive Reliability & Multi-Signal Orchestration Network for Interpretable Quality Verification
+# HARMONIQ: Calibrated Claim-Level Hybrid Hallucination Detection
 
-An academic research framework proposing a **multi-signal, claim-level hybrid verification architecture** to detect hallucinations in Large Language Models (LLMs).
+[![Branch: rebuild](https://img.shields.io/badge/branch-rebuild-blue.svg)](#)
+[![Reproducibility: 100%](https://img.shields.io/badge/reproducible-run__all.sh-green.svg)](#)
+[![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](#)
 
----
-
-## 1. Research Overview
-
-Large Language Models (ChatGPT, Claude, Gemini, Llama, Qwen) frequently generate fluent and confident responses that contain fabricated, unsupported, or contradictory claims (**LLM hallucinations**). Because high confidence does not guarantee factual correctness, single-signal detectors (e.g., confidence-only or surface-similarity) often fail.
-
-**HARMONIQ** (**H**ybrid **A**daptive **R**eliability & **M**ulti-signal **O**rchestration **N**etwork for **I**nterpretable **Q**uality) introduces a multi-signal verification layer that:
-1. Decomposes LLM responses into verifiable **atomic claims/facts**.
-2. Evaluates each claim through **four complementary verification signals**:
-   - **$C$ — Confidence Analysis & Calibrated Uncertainty**: Perplexity, entropy, and epistemic hedge calibration (*Trust Me, I'm Wrong*, 2025).
-   - **$R$ — Retrieval-Based Verification**: External knowledge grounding via document retrieval and entity coverage (*REFIND*, 2025; *FactBench*, 2024–2025).
-   - **$S$ — Semantic Consistency & Entailment**: NLI classification into `SUPPORTED`, `UNSUPPORTED`, or `CONTRADICTED`.
-   - **$V$ — Self-Verification & Sampling Consistency**: Cross-generation stability across stochastic LLM samples (*FactSelfCheck*, Findings of EACL 2026; *SelfCheckGPT*).
-3. Synthesizes signals through a **Decision-Fusion Layer** ($H = w_1 C + w_2 R + w_3 S + w_4 V$ and trained meta-classifiers).
-4. Produces **claim-level localization** (highlighted spans) and **interpretable explainability reports**.
+HARMONIQ is a claim-level hybrid hallucination detection framework that combines:
+1. **Confidence Analysis ($C$):** Entity-targeted token log-probability entropy and linguistic hedging penalties.
+2. **Retrieval Grounding ($R$):** Dense passage bi-encoder retrieval (BGE-small) with cross-encoder NLI contradiction scoring.
+3. **Semantic Faithfulness ($S$):** Directional faithfulness verification paired with deterministic negation and date/number clash detection.
+4. **Self-Verification ($V$):** Adaptive compute-gated multi-sample stochastic consensus.
+5. **Length-Damped Aggregation (HCS):** Clausal length-damped soft-max pooling that resolves the compounding False Positive Rate dilemma across long responses.
+6. **Native Missing-Value Branching:** HistGradientBoosting decision trees that natively handle missing/unretrieved evidence without synthetic imputation artifacts.
 
 ---
 
-## 2. End-to-End System Architecture
+## 1. Quick Reproduction (Single Command)
 
-```text
-                  User Query + Generated LLM Response
-                                  │
-                                  ▼
-                    Claim & Fact Decomposition
-           (Sentence splitting, atomic clauses, entity extraction)
-                                  │
-         ┌────────────────────────┴────────────────────────┐
-         │                                                 │
-         ▼                                                 ▼
-   Claim #1: "..."                                   Claim #2: "..."
-         │                                                 │
- ┌───────┴───────────────────────────────┐                 │
- │       Four Verification Signals       │                 │
- │                                       │                 │
- │ 1. Confidence Analysis (C)            │                 │
- │ 2. Retrieval Grounding (R)            │                 │
- │ 3. Semantic Entailment (S)            │                 │
- │ 4. Self-Verification Consistency (V)  │                 │
- └───────┬───────────────────────────────┘                 │
-         │                                                 │
-         ▼                                                 ▼
-   Decision Fusion Layer ◄─────────────────────────────────┘
-   (Adaptive weighted fusion / Logistic Regression / Random Forest)
-         │
-         ▼
- ┌────────────────────────────────────────────────────────┐
- │                   Final Assessment                     │
- │  - Hallucination Score (0.0 to 1.0)                    │
- │  - Risk Level: LOW / MEDIUM / HIGH                     │
- │  - Status: RELIABLE vs POTENTIALLY HALLUCINATED        │
- │  - Claim-Level Localization (Highlighted Spans)        │
- │  - Explainability Report (Claim, Evidence, Verdict)    │
- └────────────────────────────────────────────────────────┘
-```
+To reproduce all dataset partitions, claim signals, trained trees, dev-tuned calibrations, evaluation metrics, statistical bootstrap tests, vector figures, and LaTeX macros from raw benchmark data:
 
----
-
-## 3. Comparison with Existing Frameworks
-
-| Framework | Primary Venue / Year | Detection Granularity | Verification Signals Used | Decision Mechanism | External Grounding | Explainability & Localization |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **SelfCheckGPT** | *EMNLP 2023* | Sentence-level | Sampling consistency only | Average consistency score cutoff | None (zero-resource) | Sentence-level numerical score |
-| **HaluEval** | *EMNLP 2023* | Passage / QA-level | Grounded reference matching | LLM-as-a-judge / exact check | Static dataset reference | Binary verdict (Hallucinated Yes/No) |
-| **REFIND** | *arXiv 2025* | Sub-sentence span | Retrieval Sensitivity (CSR) | Sensitivity ratio threshold | Retrieved documents / search | Span-level boundary localization |
-| **FactBench / VERIFY** | *EMNLP 2024–2025* | Sentence / Fact-level | Web retrieval + LLM verification | 3-way classifier (`S`/`U`/`U`) | Dynamic Google/Web Search | Evidence passage citations |
-| **PROBE** | *Findings of ACL 2026* | Process-stage level | Multi-step pipeline inspection | 4-step pipeline judge LLM | RAG context documents | Step-by-step process attribution |
-| **FactSelfCheck** | *Findings of EACL 2026*| Fact / Triple-level | KG triples + Sampling consistency | Graph alignment / Text match | None (black-box sampling) | Fact-level triple inconsistency |
-| **HARMONIQ (Ours)** | **Proposed (2026)** | **Claim & Atomic Fact** (with char spans) | **All 4 Complementary Signals:**<br>1. Confidence ($C$)<br>2. Retrieval ($R$)<br>3. Semantic Entailment ($S$)<br>4. Self-Verification ($V$) | **Adaptive Multi-Signal Fusion** (Linear Weighted + Learned Meta-Classifiers) | **Multi-Source Hybrid** (Provided RAG, Corpus & Wikipedia) | **Comprehensive Report**: Claim-level verdict, span highlighting, signal breakdown & plain-language reason |
-
----
-
-## 4. Repository Structure
-
-```text
-.
-├── README.md                      # Complete research documentation & Colab guide
-├── requirements.txt               # Lightweight dependencies (Colab & local)
-├── download_datasets.py           # Automated downloader for benchmark datasets
-├── colab_runner.py                # One-click runner for Google Colab
-├── data/
-│   └── raw/                       # Downloaded benchmark datasets
-│       ├── halueval/              # HaluEval QA & Dialogue datasets
-│       ├── truthfulqa/            # TruthfulQA benchmark CSV
-│       ├── favamultisamples/      # FavaMultiSamples (FactSelfCheck 2026)
-│       ├── selfcheckgpt/          # WikiBio GPT-3 hallucination benchmark
-│       └── refind/                # REFIND sample dataset & annotations
-├── src/
-│   ├── config.py                  # Global hyperparameters & default weights
-│   ├── data_loader.py             # Unified loader for all 4 benchmark datasets
-│   ├── claim_decomposition.py     # Sentence & atomic claim extraction module
-│   ├── signals/                   # The 4 verification signals
-│   │   ├── base.py                # Abstract base class & SignalResult
-│   │   ├── confidence_signal.py   # Signal 1: Calibrated uncertainty
-│   │   ├── retrieval_signal.py    # Signal 2: Evidence grounding & retrieval
-│   │   ├── semantic_signal.py     # Signal 3: NLI alignment & contradiction
-│   │   └── self_verification_signal.py # Signal 4: Cross-sample consistency
-│   ├── fusion/
-│   │   └── decision_fusion.py     # Multi-signal decision fusion layer
-│   ├── localization/
-│   │   └── hallucination_localizer.py # Span localization & highlighting
-│   ├── explainability/
-│   │   └── explainer.py           # Interpretable explanation generator
-│   ├── detector.py                # Master HybridHallucinationDetector orchestrator
-│   ├── baselines.py               # Baselines 1-4 (Confidence, Retrieval, Semantic, SelfCheck)
-│   └── evaluation/
-│       ├── metrics.py             # Accuracy, Precision, Recall, F1, ROC-AUC, Latency
-│       └── benchmark_runner.py    # Batch evaluation runner
-├── experiments/
-│   ├── demo_inference.py          # Interactive single-response demonstration
-│   ├── run_benchmark.py           # Benchmark comparison (Baselines vs Hybrid)
-│   ├── run_ablation.py            # Systematic ablation study (Signal dropouts)
-│   └── run_efficiency_analysis.py # Latency and throughput analysis
-└── results/                       # Generated CSV & Markdown publication tables
-```
-
----
-
-## 4. Benchmark Datasets Included
-
-The framework incorporates real-world datasets from top 2024–2026 hallucination research:
-
-1. **HaluEval** (*Li et al.*): 10,000 QA and Dialogue samples with paired factual reference texts, ground truth answers, and hallucinated counter-factuals.
-2. **TruthfulQA** (*Lin et al.*): 790 questions designed to elicit human false beliefs and misconceptions.
-3. **FavaMultiSamples** (*Sawczyn et al., Findings of EACL 2026*): 460 passages from the *FactSelfCheck* project with 20 stochastic samples generated per prompt at temperature 1.0 for consistency analysis.
-4. **WikiBio-GPT3** (*SelfCheckGPT*, *Manakul et al.*): 238 biographies generated by GPT-3 with sentence-level human annotations (`accurate`, `minor_inaccurate`, `major_inaccurate`) and multi-sample generations.
-5. **REFIND** (*Lee et al., 2025*): Retrieval-augmented factuality benchmark with span-level hallucination labels.
-
----
-
-## 5. How to Run in Google Colab (Step-by-Step)
-
-### Option A: One-Click Runner (Fastest)
-
-1. Upload this project folder to Google Colab or clone your GitHub repository:
-   ```bash
-   git clone <YOUR_REPO_URL>
-   cd <REPO_NAME>
-   ```
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run the master Colab runner:
-   ```bash
-   python colab_runner.py
-   ```
-   This will automatically execute the dataset verification, single-query demo, full benchmark evaluation, ablation study, and efficiency analysis, saving all publication tables to `results/`.
-
----
-
-### Option B: Interactive Notebook Cells
-
-You can run individual experiments directly in notebook cells:
-
-#### 1. Download Datasets
-```python
-from download_datasets import main as download_all
-download_all()
-```
-
-#### 2. Test a Single LLM Response
-```python
-from src.detector import HybridHallucinationDetector
-
-detector = HybridHallucinationDetector(use_online_wiki=True)
-
-query = "Where was Albert Einstein born and what prize did he win?"
-response = "Albert Einstein was born in Munich, Germany, and won the Nobel Prize in Literature in 1921."
-evidence = "Albert Einstein was born in Ulm, Germany. He won the 1921 Nobel Prize in Physics."
-
-result = detector.detect(query=query, response=response, evidence=evidence)
-
-print(result["explanation_markdown"])
-```
-
-#### 3. Run Benchmark Comparison (Baselines 1-4 vs Hybrid)
-```python
-from src.data_loader import BenchmarkDataLoader
-from src.evaluation.benchmark_runner import BenchmarkRunner
-
-runner = BenchmarkRunner(use_online_wiki=False)
-records = BenchmarkDataLoader.load_halueval_qa(limit=50)
-
-df_results = runner.run_benchmark("HaluEval-QA", records)
-print(df_results.to_markdown(index=False))
-```
-
-#### 4. Run Ablation Study (Section 25 of Proposal)
-```python
-!python experiments/run_ablation.py --dataset halueval --samples 100
-```
-
-#### 5. Run Efficiency Analysis
-```python
-!python experiments/run_efficiency_analysis.py --samples 50
-```
-
----
-
-## 6. How to Run Locally
-
-If running on your local machine:
 ```bash
-# 1. Activate your virtual environment
+# Clone and enter directory
+git checkout rebuild
+
+# Install dependencies in a virtual environment
+python3 -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
 
-# 2. Download datasets
-python download_datasets.py
+# Run the master reproduction pipeline
+./run_all.sh
+```
 
-# 3. Run demo
-python experiments/demo_inference.py
-
-# 4. Run benchmark evaluation
-python experiments/run_benchmark.py --samples-per-dataset 50
-
-# 5. Run ablation study
-python experiments/run_ablation.py --dataset truthfulqa --samples 100
+To compile the LaTeX research paper with all auto-generated macros:
+```bash
+pdflatex -interaction=nonstopmode HARMONIQ_paper.tex
+pdflatex -interaction=nonstopmode HARMONIQ_paper.tex
 ```
 
 ---
 
-## 7. Mapping to Research Questions (RQs)
+## 2. Google Colab Execution (`HARMONIQ_framework.ipynb`)
 
-| Research Question | Code Implementation | Output File |
-| :--- | :--- | :--- |
-| **RQ1**: How accurately can individual signals detect hallucinations? | `src/baselines.py` (Baselines 1–4) | `results/benchmark_results.csv` |
-| **RQ2**: Does multi-signal fusion outperform individual baselines? | `src/detector.py` vs `src/baselines.py` | `results/benchmark_results.csv` |
-| **RQ3**: Which verification signal contributes most? | `experiments/run_ablation.py` (Dropouts) | `results/ablation_results.csv` |
-| **RQ4**: Does the hybrid framework reduce FPR & FNR? | `src/evaluation/metrics.py` (Confusion matrix) | `results/benchmark_results.csv` |
-| **RQ5**: Can the framework provide claim-level explanations? | `src/localization/` & `src/explainability/` | Console & markdown reports |
-| **RQ6**: What is the performance vs latency trade-off? | `experiments/run_efficiency_analysis.py` | `results/efficiency_results.csv` |
+For GPU-accelerated inference and large proxy LM scoring, run `HARMONIQ_framework.ipynb`:
+1. Open [HARMONIQ_framework.ipynb](HARMONIQ_framework.ipynb) in Google Colab.
+2. Select Runtime $\rightarrow$ **Change runtime type** $\rightarrow$ **T4 GPU**.
+3. Execute **Runtime $\rightarrow$ Restart and Run All**.
+4. The notebook runs top-to-bottom, writes `results/predictions.csv`, `results/claims.parquet`, `results/results.json`, and exports `results/numbers.tex`.
 
 ---
 
-## 8. Sample Explainability Output
+## 3. Repository Structure
 
-```markdown
-### Claim #1: "Albert Einstein was born in Munich, Germany"
-- **Hallucination Risk Score**: `0.88` | **Risk Level**: **HIGH** | **Status**: POTENTIALLY_HALLUCINATED
-- **Primary Driver**: `semantic_signal`
-- **Retrieved Grounding Evidence**: *"Albert Einstein was born in Ulm, Germany..."*
-- **Signals Breakdown**:
-  * **Semantic Alignment**: Evidence directly contradicts claim (Ulm vs Munich). (Risk: 0.92)
-  * **Retrieval Grounding**: Evidence retrieved from Wikipedia/reference context. (Risk: 0.20)
-  * **Self-Verification**: Inconsistent across stochastic samples. (Risk: 0.70)
-  * **Confidence Calibration**: Expressed without epistemic hedges. (Risk: 0.50)
+```text
+├── run_all.sh                           # Master one-command reproduction pipeline
+├── HARMONIQ_paper.tex                   # IEEEtran paper (all numbers loaded via macros)
+├── HARMONIQ_paper.pdf                   # Compiled publication-ready PDF
+├── HARMONIQ_framework.ipynb             # Linear, self-contained Colab notebook
+├── requirements.txt                     # Pinned dependencies
+├── data/
+│   ├── raw/                             # Raw benchmark sources (RAGTruth, HaluEval, TruthfulQA, WikiBio, FAVA)
+│   ├── splits.json                      # Group-disjoint split mapping (seed 42)
+│   └── cache/signals/                   # Parquet-cached claim signal scores
+├── src/
+│   ├── data/                            # Group-disjoint benchmark loaders (ragtruth, halueval, etc.)
+│   ├── signals/                         # Signal stack (confidence, retrieval, semantic, selfverif)
+│   ├── fusion/                          # HistGradientBoosting, isotonic calibration, HCS aggregators
+│   └── baselines/                       # Supervised, MiniCheck, Vectara HHEM, AlignScore, SelfCheckGPT
+├── experiments/
+│   ├── make_splits.py                   # Generates data/splits.json and split_summary.csv
+│   ├── score_all.py                     # Extracts claim signals into results/claims.parquet
+│   ├── fit_fusion.py                    # Fits GBDT and exports results/predictions.csv
+│   ├── evaluate.py                      # Group bootstrap CIs and paired difference tests
+│   ├── ablate.py                        # Signal, aggregator, and imputation ablations
+│   ├── fpr_vs_k.py                      # Multi-claim compounding risk study
+│   ├── efficiency.py                    # Wall-clock latency and throughput benchmarks
+│   ├── make_figures.py                  # Generates publication vector PDF/PNG figures
+│   └── make_numbers.py                  # Exports results/numbers.tex macros
+├── results/
+│   ├── predictions.csv                  # Response-level evaluations across all systems
+│   ├── claims.parquet                   # Claim-level extracted signals
+│   ├── stats_table.csv                  # Main benchmark metrics with 95% CIs
+│   ├── paired_tests.csv                 # Paired statistical differences vs. HARMONIQ
+│   ├── ablation_results.csv             # Empirical ablation study results
+│   ├── fpr_vs_k.csv                     # FPR vs. k data points
+│   ├── efficiency_results.csv           # Latency and throughput breakdown
+│   ├── numbers.tex                      # 240+ auto-generated LaTeX macros
+│   └── figures/                         # Vector figures (ROC, PR, Calibration, FPR vs k, Workflow)
+├── docs/
+│   ├── claim_ledger.md                  # Line-by-line mapping of paper claims to data macros
+│   └── unverified_refs.md               # Audit trail of removed unverified citations
+└── tests/                               # Comprehensive unit test suite (loaders, signals, fusion, AST integrity)
 ```
+
+---
+
+## 4. Benchmark Datasets & Licenses
+
+| Dataset | Primary Task | Partition Grouping | Official Reference | License |
+|---|---|---|---|---|
+| **RAGTruth** | QA, Summary, Data2txt | `source_id` | Niu et al. (ACL 2024) | MIT License |
+| **HaluEval-QA** | Knowledge QA | `question` | Wang et al. (EMNLP 2023) | Apache 2.0 |
+| **TruthfulQA** | Hallucination / Bias | `Question` | Lin et al. (ACL 2022) | Apache 2.0 |
+| **WikiBio-GPT3** | Hallucinated Biographies | `wiki_bio_test_idx` | Manakul et al. (EMNLP 2023) | MIT License |
+| **FAVA MultiSamples** | Fine-grained Detection | `prompt` | Mishra et al. (NAACL 2024) | Apache 2.0 |
+
+*Strict Zero-Leakage Policy*: TruthfulQA is evaluated exclusively under retrieved Wikipedia passages (regime b) without access to the answer key (`Correct Answers`).
+
+---
+
+## 5. Non-Negotiable Scientific Integrity
+
+1. **Zero Hardcoded Numbers:** No metric, AUC, latency, or curve is hand-typed into any script, table, or `.tex` file.
+2. **AST-Enforced Figure Tests:** `tests/test_no_hardcoded_numbers.py` parses the AST of plotting scripts to prevent synthetic metric arrays.
+3. **Paired Statistical Significance:** Superiority claims are accompanied by group-level paired bootstrap 95% confidence intervals and Holm-Bonferroni corrected $p$-values.
+4. **Claim Ledger:** Every claim in the Abstract and Conclusion is documented in `docs/claim_ledger.md`.

@@ -16,15 +16,37 @@ import pandas as pd
 import numpy as np
 
 
+DIGIT_MAP = {
+    '0': 'Zero', '1': 'One', '2': 'Two', '3': 'Three', '4': 'Four',
+    '5': 'Five', '6': 'Six', '7': 'Seven', '8': 'Eight', '9': 'Nine'
+}
+
+
+def clean_macro_name(name: str) -> str:
+    """Ensures macro names contain strictly alphabetic characters [A-Za-z]."""
+    # Replace digits with words
+    converted = ""
+    for char in name:
+        if char in DIGIT_MAP:
+            converted += DIGIT_MAP[char]
+        elif char.isalpha():
+            converted += char
+        elif char in ['_', '-', ' ']:
+            converted += '_'
+
+    # CamelCase parts
+    clean_parts = [part.capitalize() for part in converted.split('_') if part]
+    return "".join(clean_parts)
+
+
 def format_macro(name: str, val, precision: int = 3) -> str:
     """Formats a LaTeX macro string safely."""
-    # Remove underscores from macro names (LaTeX macro names must be purely alpha)
-    clean_name = "".join(part.capitalize() for part in name.replace("-", "_").split("_"))
+    macro_name = clean_macro_name(name)
     if isinstance(val, (float, np.floating)):
         formatted_val = f"{val:.{precision}f}"
     else:
         formatted_val = str(val)
-    return f"\\newcommand{{\\{clean_name}}}{{{formatted_val}}}\n"
+    return f"\\newcommand{{\\{macro_name}}}{{{formatted_val}}}\n"
 
 
 def generate_numbers_tex(
@@ -82,11 +104,12 @@ def generate_numbers_tex(
     if os.path.exists(ablation_csv):
         abl_df = pd.read_csv(ablation_csv)
         for _, row in abl_df.iterrows():
-            cfg_id = row["Configuration"].replace(" ", "").replace("-", "_").replace("(", "").replace(")", "").replace("/", "").replace(":", "")
-            macros.append(format_macro(f"AblAUC{cfg_id}", row["AUC"]))
+            cfg_name = row["Configuration"]
+            macros.append(format_macro(f"AblAUC{cfg_name}", row["AUC"]))
             if "Delta_AUC" in row:
                 delta_str = f"{row['Delta_AUC']:+.3f}"
-                macros.append(f"\\newcommand{{\\DeltaAUC{cfg_id}}}{{{delta_str}}}\n")
+                macro_delta_name = clean_macro_name(f"DeltaAUC{cfg_name}")
+                macros.append(f"\\newcommand{{\\{macro_delta_name}}}{{{delta_str}}}\n")
 
     # 5. Efficiency & Latency Numbers
     if os.path.exists(efficiency_csv):
